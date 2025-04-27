@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>SMS Spam Detector</title>
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>SMS Spam Detector</h1>
+      <textarea
+        id="message"
+        placeholder="Enter your SMS message here..."
+      ></textarea>
+      <button onclick="predict()">Check for Spam</button>
+      <div id="result" class="hidden">
+        <p id="prediction"></p>
+        <p id="confidence"></p>
+      </div>
+    </div>
+
+    <script>
+      async function predict() {
+        const message = document.getElementById("message").value;
+        if (!message) {
+          alert("Please enter a message");
+          return;
+        }
+
+        try {
+          const response = await fetch("/predict", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ message: message }),
+          });
+
+          const data = await response.json();
+
+          const resultDiv = document.getElementById("result");
+          const predictionP = document.getElementById("prediction");
+          const confidenceP = document.getElementById("confidence");
+
+          resultDiv.classList.remove("hidden");
+
+          if (data.prediction === 1) {
+            resultDiv.className = "result ham";
+            predictionP.textContent = "✅ This is a legitimate (HAM) message";
+          } else {
+            resultDiv.className = "result spam";
+            predictionP.textContent = "⚠️ This is a SPAM message";
+          }
+
+          confidenceP.textContent = `Confidence: ${(
+            data.confidence * 100
+          ).toFixed(2)}%`;
+        } catch (error) {
+          console.error("Error:", error);
+          alert("Error checking message");
+        }
+      }
+    </script>
+  </body>
+</html>
